@@ -1,6 +1,6 @@
 # Recipes
 
-Automatically learn ingredient effects when reading recipes, and correct recipes when ingredients are invalid
+Automatically learn ingredient effects when reading recipes, and correct recipes when ingredients are invalid using rapidfuzz
 
 ## Requirements
 * [CMake](https://cmake.org/)
