@@ -56,6 +56,22 @@ namespace stl
 	{
 		return { a_view.data(), a_view.size() };
 	}
+
+	namespace string
+	{
+		inline bool icontains(std::string_view a_str1, std::string_view a_str2)
+		{
+			if (a_str2.length() > a_str1.length())
+				return false;
+
+			auto found = std::ranges::search(a_str1, a_str2,
+				[](char ch1, char ch2) {
+					return std::toupper(static_cast<unsigned char>(ch1)) == std::toupper(static_cast<unsigned char>(ch2));
+				});
+
+			return !found.empty();
+		}
+	}
 }
 
 #ifdef SKYRIM_AE

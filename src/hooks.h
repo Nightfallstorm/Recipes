@@ -31,11 +31,12 @@ struct RecipeReadWorldHook
 
 struct RecipeReadInventoryHook
 {
-	static bool thunk(std::uintptr_t a_description, std::uint64_t unk, std::uint64_t unk1, std::uint64_t unk2)
+	static bool thunk(RE::TESDescription* a_description, std::uint64_t unk, std::uint64_t unk1, std::uint64_t unk2)
 	{
 		logger::info("RecipeReadInventoryHook triggered!");
-		auto book = reinterpret_cast<RE::TESObjectBOOK*>(a_description - 0xA8);  // TODO: Cast this cleaner?
-		if (Recipe::isBookRecipe(book)) {
+
+		auto book = skyrim_cast<RE::TESObjectBOOK*, RE::TESDescription>(a_description);
+		if (book && Recipe::isBookRecipe(book)) {
 			logger::info("RecipeReadInventoryHook is recipe!");
 			reinterpret_cast<Recipe::BookRecipe*>(book)->learnIngredients();
 		}
@@ -48,7 +49,7 @@ struct RecipeReadInventoryHook
 	// Install our hook at the specified address
 	static inline void Install()
 	{
-		REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(50991, 51870), REL::VariantOffset(0xE1, 0xD7, 0xE6) };  // TODO: AE/VR
+		REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(50991, 51870), REL::VariantOffset(0xE1, 0xD7, 0xE6) };
 		stl::write_thunk_call<RecipeReadInventoryHook>(target.address());
 		logger::info("RecipeReadInventoryHook hooked at address: {:x}!", target.address());
 		logger::info("RecipeReadInventoryHook hooked at offset: {:x}!", target.offset());
@@ -72,7 +73,8 @@ struct GetDescriptionHookSE
 	// Install our hook at the specified address
 	static inline void Install()
 	{
-		REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(14399, 0), REL::VariantOffset(0x53, 0x0, 0x53) };  // TODO: AE/VR
+		assert(REL::Module::IsSE() || REL::Module::IsVR());
+		REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(14399, 0), REL::VariantOffset(0x53, 0x0, 0x53) };
 		stl::write_thunk_call<GetDescriptionHookSE>(target.address());
 		logger::info("GetDescription hooked at address: {:x}!", target.address());
 		logger::info("GetDescription hooked at offset: {:x}!", target.offset());

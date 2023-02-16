@@ -14,13 +14,13 @@ namespace Recipe
 
 	static bool hasLearnedEffect(RE::IngredientItem* a_ingredient, std::uint32_t a_aiIndex)
 	{
-		// TODO: Put in CLIB?
+		// TODO: This is in PO3 CLIB, grab from CLIB-NG once updated
 		return (a_ingredient->gamedata.knownEffectFlags & (1 << a_aiIndex)) != 0;
 	}
 
 	static bool isBookRecipe(RE::TESObjectBOOK* a_book)
 	{
-		return a_book->HasKeyword(DataBase::GetSingleton()->vendorItemRecipeKeyword); // TODO: Dragonborn recipes apply when they shouldn't in QASmoke, fix
+		return a_book->HasKeyword(DataBase::GetSingleton()->vendorItemRecipeKeyword);
 	}
 	class BookRecipe : RE::TESObjectBOOK
 	{
@@ -39,8 +39,7 @@ namespace Recipe
 				if (line.find("~") != std::string::npos) {
 					RE::IngredientItem* bestMatchingIngredient = nullptr;
 					for (auto ingredient : DataBase::GetSingleton()->ingredients) {
-						// TODO: case insensitive
-						if (line.find(ingredient->GetFullName()) != std::string::npos) {
+						if (stl::string::icontains(line, ingredient->GetFullName())) {
 							if (!bestMatchingIngredient || bestMatchingIngredient->GetFullNameLength() < ingredient->GetFullNameLength()) {
 								// Some ingredients like Watcher's Eye match both Watcher's eye and Blind Watcher's Eye, so get the best match
 								bestMatchingIngredient = ingredient;
@@ -62,9 +61,7 @@ namespace Recipe
 		{
 			std::string recipeEffectName;
 			for (auto line : getRecipeLines()) {
-				// todo: Case insensitive
-				if (line.find("Potion") != std::string::npos || line.find("Poison") != std::string::npos ||
-					line.find("potion") != std::string::npos || line.find("poison") != std::string::npos) {
+				if (stl::string::icontains(line, "potion") || stl::string::icontains(line, "poison")) {
 					// Note: We are intentionally NOT finding a matching effect because multiple effects can have the same name.
 					// Therefore, we will just check each ingredient's effect's name against the name in the recipe to confirm matches
 					recipeEffectName = line;
@@ -80,7 +77,7 @@ namespace Recipe
 			return splitLines(getRecipeText());
 		}
 
-		std::vector<std::string> splitLines(std::string a_string) // TODO: Put in Utils
+		std::vector<std::string> splitLines(std::string a_string)  // TODO: Put in Utils
 		{
 			std::vector<std::string> lines;
 
@@ -102,7 +99,7 @@ namespace Recipe
 				result = result + line + "\n";
 			}
 			if (a_lines.size() > 0) {
-				result.pop_back(); // Remove trailing \n
+				result.pop_back();  // Remove trailing \n
 			}
 			return result;
 		}
@@ -141,11 +138,8 @@ namespace Recipe
 			std::string recipeEffectName;
 			auto lines = splitLines(a_out->c_str());
 			std::vector<std::string> newLines;
-			for (auto line : lines)
-				{
-				// todo: Case insensitive
-				if (line.find("Potion") != std::string::npos || line.find("Poison") != std::string::npos ||
-					line.find("potion") != std::string::npos || line. find("poison") != std::string::npos) {
+			for (auto line : lines) {
+				if (stl::string::icontains(line, "potion") || stl::string::icontains(line, "poison")) {
 					// Note: We are intentionally NOT finding a matching effect because multiple effects can have the same name.
 					// Therefore, we will just check each ingredient's effect's name against the name in the recipe to confirm matches
 					recipeEffectName = line;
@@ -159,8 +153,7 @@ namespace Recipe
 				if (line.find("~") != std::string::npos) {
 					RE::IngredientItem* matchedIngredient = nullptr;
 					for (auto ingredient : DataBase::GetSingleton()->ingredients) {
-						// TODO: case insensitive
-						if (line.find(ingredient->GetFullName()) != std::string::npos) {
+						if (stl::string::icontains(line, ingredient->GetFullName())) {
 							matchedIngredient = ingredient;
 							break;
 						}
@@ -198,7 +191,7 @@ namespace Recipe
 					}
 				}
 			}
-			
+
 			return bestIngredientMatch.first;
 		}
 	};

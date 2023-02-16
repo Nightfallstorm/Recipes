@@ -1,5 +1,6 @@
 #pragma once
 #include "PCH.h"
+
 class DataBase
 {
 public:
@@ -41,10 +42,9 @@ private:
 			if (form->Is(RE::IngredientItem::FORMTYPE)) {
 				ingredients.push_back(form->As<RE::IngredientItem>());
 			} else if (form->Is(RE::AlchemyItem::FORMTYPE)) {
-				// TODO: Case insensitive
 				auto name = std::string(form->As<RE::AlchemyItem>()->GetFullName());
-				if (name.find("Potion") != std::string::npos || name.find("Poison") != std::string::npos ||
-					name.find("potion") != std::string::npos || name.find("poison") != std::string::npos) {
+				std::transform(name.begin(), name.end(), name.begin(), ::toupper);
+				if (name.find("POTION") != std::string::npos || name.find("POISON") != std::string::npos) {
 					for (auto effect : form->As<RE::AlchemyItem>()->effects) {
 						effects.insert(effect->baseEffect);
 					}
