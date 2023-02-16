@@ -12,8 +12,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 			RecipeReadWorldHook::Install();
 			RecipeReadInventoryHook::Install();
 			if (REL::Module::IsAE()) {
-				// TODO: AE inlined GetDescription. Check `GetDescription` in CLIB, and hook inside the function to swap the output
-				// for the correct ingredients with Xbyak/custom thunk
+				GetDescriptionHookAE::Install();
 			} else {
 				GetDescriptionHookSE::Install();
 			}

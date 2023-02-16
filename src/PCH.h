@@ -57,6 +57,33 @@ namespace stl
 		return { a_view.data(), a_view.size() };
 	}
 
+	inline std::vector<std::string> splitLines(std::string a_string)
+	{
+		std::vector<std::string> lines;
+
+		size_t last = 0;
+		size_t next = 0;
+		std::string delimiter = "\n";
+		while ((next = a_string.find(delimiter, last)) != std::string::npos) {
+			auto line = a_string.substr(last, next - last);
+			last = next + 1;
+			lines.emplace_back(line);
+		}
+		return lines;
+	}
+
+	inline std::string combineLines(std::vector<std::string> a_lines)  // TODO: Put in Utils
+	{
+		std::string result = "";
+		for (auto line : a_lines) {
+			result = result + line + "\n";
+		}
+		if (a_lines.size() > 0) {
+			result.pop_back();  // Remove trailing \n
+		}
+		return result;
+	}
+
 	namespace string
 	{
 		inline bool icontains(std::string_view a_str1, std::string_view a_str2)

@@ -74,34 +74,7 @@ namespace Recipe
 
 		std::vector<std::string> getRecipeLines()
 		{
-			return splitLines(getRecipeText());
-		}
-
-		std::vector<std::string> splitLines(std::string a_string)  // TODO: Put in Utils
-		{
-			std::vector<std::string> lines;
-
-			size_t last = 0;
-			size_t next = 0;
-			std::string delimiter = "\n";
-			while ((next = a_string.find(delimiter, last)) != std::string::npos) {
-				auto line = a_string.substr(last, next - last);
-				last = next + 1;
-				lines.emplace_back(line);
-			}
-			return lines;
-		}
-
-		std::string combineLines(std::vector<std::string> a_lines)  // TODO: Put in Utils
-		{
-			std::string result = "";
-			for (auto line : a_lines) {
-				result = result + line + "\n";
-			}
-			if (a_lines.size() > 0) {
-				result.pop_back();  // Remove trailing \n
-			}
-			return result;
+			return stl::splitLines(getRecipeText());
 		}
 
 		void learnIngredients()
@@ -109,10 +82,11 @@ namespace Recipe
 			auto recipeEffect = getRecipeEffectName();
 			if (recipeEffect != "") {
 				// learn ingredient effects
+				bool learnedEffect = false;
 				for (auto ingredient : getIngredients()) {
 					logger::info("Parsing ingredient: {}", ingredient->GetFullName());
 					std::uint32_t index = 0;
-					bool learnedEffect = false;
+					
 					for (auto effect : ingredient->effects) {
 						logger::info("Check effect {}, against recipeEffect", effect->baseEffect->GetFullName());
 						if (recipeEffect.find(effect->baseEffect->GetFullName()) != std::string::npos && effect->baseEffect->GetFullNameLength() != 0) {
@@ -123,20 +97,20 @@ namespace Recipe
 							}
 						}
 
-						if (learnedEffect) {
-							RE::BSAudioManager::GetSingleton()->Play(DataBase::GetSingleton()->skillIncreaseSound);
-						}
-
 						index++;
-					}
+					}					
+				}
+
+				if (learnedEffect) {
+					RE::BSAudioManager::GetSingleton()->Play(DataBase::GetSingleton()->skillIncreaseSound);
 				}
 			}
 		}
 
-		RE::BSString correctIngredients(RE::BSString* a_out)
+		static RE::BSString correctIngredients(RE::BSString* a_out) // TODO: Static this, we don't use reference to the original book
 		{
 			std::string recipeEffectName;
-			auto lines = splitLines(a_out->c_str());
+			auto lines = stl::splitLines(a_out->c_str());
 			std::vector<std::string> newLines;
 			for (auto line : lines) {
 				if (stl::string::icontains(line, "potion") || stl::string::icontains(line, "poison")) {
@@ -169,11 +143,11 @@ namespace Recipe
 					newLines.push_back(line);
 				}
 			}
-			logger::info("Returning corrected description: {}", combineLines(newLines));
-			return RE::BSString(combineLines(newLines));
+			logger::info("Returning corrected description: {}", stl::combineLines(newLines));
+			return RE::BSString(stl::combineLines(newLines));
 		}
 
-		RE::IngredientItem* getClosestMatchingIngredient(std::string ingredientToCorrect, std::string recipeEffectName)
+		static RE::IngredientItem* getClosestMatchingIngredient(std::string ingredientToCorrect, std::string recipeEffectName)
 		{
 			std::pair<RE::IngredientItem*, double> bestIngredientMatch = { nullptr, 0 };
 			for (auto ingredient : DataBase::GetSingleton()->ingredients) {

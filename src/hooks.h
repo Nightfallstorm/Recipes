@@ -60,11 +60,11 @@ struct GetDescriptionHookSE
 {
 	static void thunk(RE::TESDescription* a_description, RE::BSString* a_out, RE::TESForm* a_parent, std::uint32_t unk)
 	{
-		logger::info("GetDescriptionHook triggered!");
+		logger::info("GetDescriptionHookSE triggered!");
 		func(a_description, a_out, a_parent, unk);  // invoke original to get original description string output
 		if (a_parent && a_parent->As<RE::TESObjectBOOK>() && Recipe::isBookRecipe(a_parent->As<RE::TESObjectBOOK>())) {
-			logger::info("GetDescriptionHook is recipe!");
-			*a_out = reinterpret_cast<Recipe::BookRecipe*>(a_parent->As<RE::TESObjectBOOK>())->correctIngredients(a_out);
+			logger::info("GetDescriptionHookSE is recipe!");
+			*a_out = Recipe::BookRecipe::correctIngredients(a_out);
 		}
 	}
 
@@ -76,7 +76,37 @@ struct GetDescriptionHookSE
 		assert(REL::Module::IsSE() || REL::Module::IsVR());
 		REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(14399, 0), REL::VariantOffset(0x53, 0x0, 0x53) };
 		stl::write_thunk_call<GetDescriptionHookSE>(target.address());
-		logger::info("GetDescription hooked at address: {:x}!", target.address());
-		logger::info("GetDescription hooked at offset: {:x}!", target.offset());
+		logger::info("GetDescriptionHookSE hooked at address: {:x}!", target.address());
+		logger::info("GetDescriptionHookSE hooked at offset: {:x}!", target.offset());
+	}
+};
+
+struct GetDescriptionHookAE
+{
+	static void thunk(RE::BSString* a_out, std::uint64_t a_unk, std::uint64_t a_unk2)
+	{
+		logger::info("GetDescriptionHookAE triggered!");
+		func(a_out, a_unk, a_unk2);  // invoke original
+
+		// Unfortunately, there no easy way to grab the parent form to verify if it is a recipe
+		// However, the ingredient correction won't do anything if the text is not in a recipe format, so this should be fine
+		*a_out = Recipe::BookRecipe::correctIngredients(a_out);
+	}
+
+	static inline REL::Relocation<decltype(thunk)> func;
+
+	// Install our hook at the specified address
+	static inline void Install()
+	{
+		assert(REL::Module::IsAE());
+		REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0xFB, 0x0) };
+		REL::Relocation<std::uintptr_t> target2{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0x174, 0x0) };
+		stl::write_thunk_call<GetDescriptionHookAE>(target.address());
+		stl::write_thunk_call<GetDescriptionHookAE>(target2.address());
+		logger::info("GetDescriptionHookAE hooked at address: {:x}!", target.address());
+		logger::info("GetDescriptionHookAE hooked at offset: {:x}!", target.offset());
+
+		logger::info("GetDescriptionHookAE hooked at address: {:x}!", target2.address());
+		logger::info("GetDescriptionHookAE hooked at offset: {:x}!", target2.offset());
 	}
 };
