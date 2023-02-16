@@ -60,10 +60,8 @@ struct GetDescriptionHookSE
 {
 	static void thunk(RE::TESDescription* a_description, RE::BSString* a_out, RE::TESForm* a_parent, std::uint32_t unk)
 	{
-		logger::info("GetDescriptionHookSE triggered!");
 		func(a_description, a_out, a_parent, unk);  // invoke original to get original description string output
 		if (a_parent && a_parent->As<RE::TESObjectBOOK>() && Recipe::isBookRecipe(a_parent->As<RE::TESObjectBOOK>())) {
-			logger::info("GetDescriptionHookSE is recipe!");
 			*a_out = Recipe::BookRecipe::correctIngredients(a_out);
 		}
 	}
@@ -85,7 +83,6 @@ struct GetDescriptionHookAE
 {
 	static void thunk(RE::BSString* a_out, std::uint64_t a_unk, std::uint64_t a_unk2)
 	{
-		logger::info("GetDescriptionHookAE triggered!");
 		func(a_out, a_unk, a_unk2);  // invoke original
 
 		// Unfortunately, there no easy way to grab the parent form to verify if it is a recipe

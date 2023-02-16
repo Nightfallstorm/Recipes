@@ -143,7 +143,6 @@ namespace Recipe
 					newLines.push_back(line);
 				}
 			}
-			logger::info("Returning corrected description: {}", stl::combineLines(newLines));
 			return RE::BSString(stl::combineLines(newLines));
 		}
 
