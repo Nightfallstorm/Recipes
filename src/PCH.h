@@ -72,7 +72,7 @@ namespace stl
 		return lines;
 	}
 
-	inline std::string combineLines(std::vector<std::string> a_lines)  // TODO: Put in Utils
+	inline std::string combineLines(std::vector<std::string> a_lines)
 	{
 		std::string result = "";
 		for (auto line : a_lines) {

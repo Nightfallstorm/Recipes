@@ -107,7 +107,7 @@ namespace Recipe
 			}
 		}
 
-		static RE::BSString correctIngredients(RE::BSString* a_out) // TODO: Static this, we don't use reference to the original book
+		static RE::BSString correctIngredients(RE::BSString* a_out)
 		{
 			std::string recipeEffectName;
 			auto lines = stl::splitLines(a_out->c_str());
