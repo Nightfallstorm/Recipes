@@ -1,0 +1,23 @@
+{
+  "name": "recipes",
+  "version-string": "1.0.0",
+  "description": "Only cool people read this ;)",
+  "homepage": "",
+  "license": "GPL-3.0",
+  "dependencies": [
+    "boost-stl-interfaces",
+    "robin-hood-hashing",
+    "rsm-binary-io",
+    "simpleini",
+    "spdlog",
+    "xbyak",
+    "commonlibsse-ng"
+  ],
+  "builtin-baseline": "bd1ef2df46303989eeb048eb7aa9b816aa46365e",
+  "overrides": [
+    {
+      "name": "fmt",
+      "version": "8.0.1"
+    }
+  ]
+}
