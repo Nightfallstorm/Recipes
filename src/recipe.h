@@ -134,8 +134,13 @@ namespace Recipe
 					}
 
 					if (!matchedIngredient) {
-						newLines.push_back(std::format("~{}", getClosestMatchingIngredient(line, recipeEffectName)->GetFullName()));
-						logger::info("Corrected ingredient {} to ~{}", line, getClosestMatchingIngredient(line, recipeEffectName)->GetFullName());
+						auto closestIngredient = getClosestMatchingIngredient(line, recipeEffectName);
+						if (closestIngredient && closestIngredient->GetFullName()) {
+							newLines.push_back(std::format("~{}", closestIngredient->GetFullName()));
+							logger::info("Corrected ingredient {} to ~{}", line, closestIngredient->GetFullName());
+						} else {
+							logger::info("Could not correct ingredient {}", line);
+						}
 					} else {
 						newLines.push_back(line);
 					}
