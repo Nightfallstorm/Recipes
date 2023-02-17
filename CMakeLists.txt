@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 set(NAME "Recipes")
-set(VERSION 1.0.1)
+set(VERSION 1.0.2)
 
 # ---- Cache build vars ----
 
