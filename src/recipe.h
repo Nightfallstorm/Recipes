@@ -139,6 +139,7 @@ namespace Recipe
 							newLines.push_back(std::format("~{}", closestIngredient->GetFullName()));
 							logger::info("Corrected ingredient {} to ~{}", line, closestIngredient->GetFullName());
 						} else {
+							newLines.push_back(line);
 							logger::info("Could not correct ingredient {}", line);
 						}
 					} else {
