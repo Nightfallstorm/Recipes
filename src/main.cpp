@@ -12,6 +12,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 			RecipeReadWorldHook::Install();
 			RecipeReadInventoryHook::Install();
 			if (REL::Module::IsAE()) {
+				ValidateBookAE::Install();
 				GetDescriptionHookAE::Install();
 			} else {
 				GetDescriptionHookSE::Install();

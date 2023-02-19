@@ -42,6 +42,7 @@ namespace Recipe
 						if (stl::string::icontains(line, ingredient->GetFullName())) {
 							if (!bestMatchingIngredient || bestMatchingIngredient->GetFullNameLength() < ingredient->GetFullNameLength()) {
 								// Some ingredients like Watcher's Eye match both Watcher's eye and Blind Watcher's Eye, so get the best match
+								logger::info("Initially matched {}", ingredient->GetFullName());
 								bestMatchingIngredient = ingredient;
 							}
 						}
@@ -50,6 +51,8 @@ namespace Recipe
 					if (bestMatchingIngredient) {
 						logger::info("ingredient found as {}:{:x}!", bestMatchingIngredient->GetFullName(), bestMatchingIngredient->formID);
 						ingredients.push_back(bestMatchingIngredient);
+					} else {
+						logger::warn("Couldn't parse {} for ingredient", line);
 					}
 				}
 			}
@@ -117,18 +120,29 @@ namespace Recipe
 					// Note: We are intentionally NOT finding a matching effect because multiple effects can have the same name.
 					// Therefore, we will just check each ingredient's effect's name against the name in the recipe to confirm matches
 					recipeEffectName = line;
-					logger::info("Recipe effect to check against is for correcting ingredients is {}", recipeEffectName);
+					logger::info("Recipe effect to check against for correcting ingredients is {}", recipeEffectName);
 					break;
 				}
 			}
 
 			std::vector<RE::IngredientItem*> ingredients;
 			for (auto line : lines) {
+				auto correctedLine = line;
 				if (line.find("~") != std::string::npos) {
 					RE::IngredientItem* matchedIngredient = nullptr;
 					for (auto ingredient : DataBase::GetSingleton()->ingredients) {
 						if (stl::string::icontains(line, ingredient->GetFullName())) {
-							matchedIngredient = ingredient;
+							bool matchedEffect = false;
+							for (auto effect : ingredient->effects) {
+								if (effect && effect->baseEffect && stl::string::icontains(recipeEffectName, effect->baseEffect->GetFullName())) {
+									matchedEffect = true;
+									break;
+								}
+							}
+							if (matchedEffect) {
+								logger::info("Matched ingredient: {}", ingredient->GetFullName());
+								matchedIngredient = ingredient;
+							}
 							break;
 						}
 					}
@@ -136,18 +150,14 @@ namespace Recipe
 					if (!matchedIngredient) {
 						auto closestIngredient = getClosestMatchingIngredient(line, recipeEffectName);
 						if (closestIngredient && closestIngredient->GetFullName()) {
-							newLines.push_back(std::format("~{}", closestIngredient->GetFullName()));
+							correctedLine = std::format("~{}", closestIngredient->GetFullName());
 							logger::info("Corrected ingredient {} to ~{}", line, closestIngredient->GetFullName());
 						} else {
-							newLines.push_back(line);
 							logger::info("Could not correct ingredient {}", line);
 						}
-					} else {
-						newLines.push_back(line);
 					}
-				} else {
-					newLines.push_back(line);
 				}
+				newLines.push_back(correctedLine);
 			}
 			return RE::BSString(stl::combineLines(newLines));
 		}
@@ -158,7 +168,7 @@ namespace Recipe
 			for (auto ingredient : DataBase::GetSingleton()->ingredients) {
 				bool matchesRecipe = false;
 				for (auto effect : ingredient->effects) {
-					if (recipeEffectName.find(effect->baseEffect->GetFullName()) != std::string::npos) {
+					if (stl::string::icontains(recipeEffectName, effect->baseEffect->GetFullName())) {
 						matchesRecipe = true;
 						break;
 					}

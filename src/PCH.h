@@ -65,17 +65,15 @@ namespace stl
 		size_t next = 0;
 		std::string delimiter = "\n";
 
-		// If no /n present, just use first line
-		if ((next = a_string.find(delimiter, last)) == std::string::npos) {
-			lines.emplace_back(a_string);
-			return lines;
-		}
-
 		while ((next = a_string.find(delimiter, last)) != std::string::npos) {
 			auto line = a_string.substr(last, next - last);
 			last = next + 1;
 			lines.emplace_back(line);
 		}
+
+		// Insert last line without /n
+		auto line = a_string.substr(last, a_string.size() - last);
+		lines.emplace_back(line);
 		
 		return lines;
 	}
@@ -84,7 +82,7 @@ namespace stl
 	{
 		std::string result = "";
 		for (auto line : a_lines) {
-			result = result + line + "\n";
+			result = result + line + '\n';
 		}
 		if (a_lines.size() > 0) {
 			result.pop_back();  // Remove trailing \n

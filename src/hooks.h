@@ -60,9 +60,18 @@ struct GetDescriptionHookSE
 {
 	static void thunk(RE::TESDescription* a_description, RE::BSString* a_out, RE::TESForm* a_parent, std::uint32_t unk)
 	{
+#ifdef _DEBUG
+		logger::info("GetDescriptionHookSE triggered!");
+#endif
 		func(a_description, a_out, a_parent, unk);  // invoke original to get original description string output
 		if (a_parent && a_parent->As<RE::TESObjectBOOK>() && Recipe::isBookRecipe(a_parent->As<RE::TESObjectBOOK>())) {
-			*a_out = Recipe::BookRecipe::correctIngredients(a_out);
+#ifdef _DEBUG
+			logger::info("Correcting ingredients!");
+#endif
+			auto newText = Recipe::BookRecipe::correctIngredients(a_out);
+			if (newText.size() > 0) {  // Simple size check in case of a bug
+				*a_out = newText;
+			} 
 		}
 	}
 
@@ -79,15 +88,74 @@ struct GetDescriptionHookSE
 	}
 };
 
+// Track if a book is valid between the two AE hooks
+static inline bool bookValidAE = false;
+struct ValidateBookAE
+{
+	// AE inlines GetDescription, so we have to use a new hook right after the check for the parent form
+	// so we can validate that parent form is a book recipe
+	static void thunk(RE::BSString* a_out, RE::TESForm* a_parent, std::uint64_t a_unk)
+	{
+		func(a_out, nullptr, 0); // Invoke original (BSString::Set(a_out, 0, 0)
+#ifdef _DEBUG
+		logger::info("ValidateBookAE triggered!");
+#endif
+		if (a_parent && a_parent->As<RE::TESObjectBOOK>() && Recipe::isBookRecipe(a_parent->As<RE::TESObjectBOOK>())) {
+			bookValidAE = true; // Set book valid for GetDescription hook to check
+#ifdef _DEBUG
+			logger::info("ValidateBookAE found valid recipe book!");
+#endif
+		}
+	}
+
+	static inline REL::Relocation<decltype(thunk)> func;
+
+	struct GetParentInsideHook : Xbyak::CodeGenerator
+	{
+		// We can trust rdx will be scratched over when we jump back to the skyirm code
+		// This moves the parent form, which is currently in rdi, to rdx so our ValidateBookAE hook can use it
+		// rdx is already zeroed out, so we aren't worried about losing any data
+		GetParentInsideHook()
+		{
+			mov(rdx, rdi);
+		}
+	};
+	// Install our hook at the specified address
+	static inline void Install()
+	{
+		assert(REL::Module::IsAE());
+		REL::Relocation<std::uintptr_t> codeSwap{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0x8B, 0x0) };
+		REL::safe_fill(codeSwap.address(), REL::NOP, 0x5);  // Fill with NOP just in case
+		auto newCode = GetParentInsideHook();
+		assert(newCode.getSize() <= 0x5);
+		REL::safe_write(codeSwap.address(), newCode.getCode(), newCode.getSize());
+
+		REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(0, 14552), REL::VariantOffset(0x0, 0x93, 0x0) };
+		stl::write_thunk_call<ValidateBookAE>(target.address());
+
+		logger::info("ValidateBookAE hooked at address: {:x}!", target.address());
+		logger::info("ValidateBookAE hooked at offset: {:x}!", target.offset());
+	}
+};
 struct GetDescriptionHookAE
 {
 	static void thunk(RE::BSString* a_out, std::uint64_t a_unk, std::uint64_t a_unk2)
 	{
+#ifdef _DEBUG
+		logger::info("GetDescriptionHookAE triggered!");
+#endif
 		func(a_out, a_unk, a_unk2);  // invoke original
 
-		// Unfortunately, there no easy way to grab the parent form to verify if it is a recipe
-		// However, the ingredient correction won't do anything if the text is not in a recipe format, so this should be fine
-		*a_out = Recipe::BookRecipe::correctIngredients(a_out);
+		if (bookValidAE) {
+#ifdef _DEBUG
+			logger::info("Correcting ingredients");
+#endif
+			auto newText = Recipe::BookRecipe::correctIngredients(a_out);
+			if (newText.size() > 0) {  // Simple size check in case of a bug
+				*a_out = newText;
+			}
+		}
+		bookValidAE = false;  // Reset book valid status
 	}
 
 	static inline REL::Relocation<decltype(thunk)> func;
